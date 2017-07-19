@@ -197,6 +197,22 @@ def get_accession_id(dirname):
         return None
 
 
+def signal_status(unit):
+    """Calls all the scripts in the subfolder `signals` each time there is a change of status.
+
+    :param unit: the models.Unit object concerned
+    """
+    # Run all scripts in signals directory
+    run_scripts(
+        'signals',
+        unit.path,  # Absolute path
+        unit.unit_type,  # Transfer type
+        unit.status,  # status (COMPLETED, FAILED...)
+        unit.uuid if unit.uuid else 'None',  # UUID if it exists
+        unit.accession_id if unit.accession_id else 'None'  # accession ID if it exists
+    )
+
+
 def run_scripts(directory, *args):
     """
     Run all executable scripts in directory relative to this file.
@@ -338,8 +354,9 @@ def start_transfer(ss_url, ss_user, ss_api_key, ts_location_uuid, ts_path, depth
     if not response.ok or resp_json.get('error'):
         LOGGER.error('Unable to start transfer.')
         LOGGER.error('Response: %s', resp_json)
-        new_transfer = models.Unit(path=target, unit_type='transfer', status='FAILED', current=False)
+        new_transfer = models.Unit(path=target, unit_type='transfer', status='FAILED', current=False, accession_id=accession)
         session.add(new_transfer)
+        signal_status(new_transfer)
         return None
 
     try:
@@ -363,14 +380,15 @@ def start_transfer(ss_url, ss_user, ss_api_key, ts_location_uuid, ts_path, depth
         # Mark as started
         if result:
             LOGGER.info('Approved %s', result)
-            new_transfer = models.Unit(uuid=result, path=target, unit_type='transfer', current=True)
+            new_transfer = models.Unit(uuid=result, path=target, unit_type='transfer', status='PROCESSING', current=True, accession_id=accession)
             LOGGER.info('New transfer: %s', new_transfer)
             session.add(new_transfer)
+            signal_status(new_transfer)
             break
         LOGGER.info('Failed approve, try %s of %s', i + 1, retry_count)
     else:
         LOGGER.warning('Not approved')
-        new_transfer = models.Unit(uuid=None, path=target, unit_type='transfer', current=False)
+        new_transfer = models.Unit(uuid=None, path=target, unit_type='transfer', current=False, accession_id=accession)
         session.add(new_transfer)
         return None
 
@@ -454,7 +472,10 @@ def main(am_user, am_api_key, ss_user, ss_api_key, ts_uuid, ts_path, depth, am_u
             os.remove(pid_file)
             return 1
         status = status_info.get('status')
-        current_unit.status = status
+        current_unit = session.query(models.Unit).filter_by(current=True).one()
+        if current_unit.status != status or current_unit.uuid != unit_uuid:
+            current_unit.status = status
+            signal_status(current_unit)
     # If processing, exit
     if status == 'PROCESSING':
         LOGGER.info('Current transfer still processing, nothing to do.')

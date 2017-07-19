@@ -13,14 +13,15 @@ class Unit(Base):
     __tablename__ = 'unit'
     id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
     uuid = Column(String(36))
+    accession_id = Column(String(255), nullable=True)
     path = Column(Binary())
     unit_type = Column(String(10))  # ingest or transfer
-    status = Column(String(20), nullable=True)
+    status = Column(String(20), nullable=False)
     microservice = Column(String(50))
     current = Column(Boolean(create_constraint=False))
 
     def __repr__(self):
-        return "<Unit(id={s.id}, uuid={s.uuid}, unit_type={s.unit_type}, path={s.path}, status={s.status}, current={s.current})>".format(s=self)
+        return "<Unit(id={s.id}, uuid={s.uuid}, accession_id={s.accession_id}, unit_type={s.unit_type}, path={s.path}, status={s.status}, current={s.current})>".format(s=self)
 
 
 def init(databasefile):
