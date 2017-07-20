@@ -4,8 +4,9 @@
 # at the top of this file.
 
 import requests
+import sys
 
-INVENIO_URL = "http://127.0.0.1:5000/api/oais/archive/{}/"
+INVENIO_URL = "http://web:5000/api/oais/archive/{}/"
 """IP addresse of the Invenio server."""
 
 def main(path, unit_type, status, uuid, accession_id):
@@ -13,9 +14,10 @@ def main(path, unit_type, status, uuid, accession_id):
         status = "AIP_PROCESSING"
     params = {
         "accession_id": accession_id,
-        "status": status,
-        "archivematica_id": uuid
+        "status": status
     }
+    if uuid and uuid != 'None':
+        params['archivematica_id'] = uuid
     response = requests.patch(INVENIO_URL.format(accession_id), json=params)
     if not response.ok:
         # TODO

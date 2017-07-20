@@ -191,7 +191,7 @@ def get_accession_id(dirname):
         return None
     output = fsdecode(output)
     try:
-        return ast.literal_eval(output)
+        return str(ast.literal_eval(output))
     except Exception:
         LOGGER.info('Unable to parse output from %s. Output: %s', script_path, output)
         return None
@@ -388,8 +388,10 @@ def start_transfer(ss_url, ss_user, ss_api_key, ts_location_uuid, ts_path, depth
         LOGGER.info('Failed approve, try %s of %s', i + 1, retry_count)
     else:
         LOGGER.warning('Not approved')
-        new_transfer = models.Unit(uuid=None, path=target, unit_type='transfer', current=False, accession_id=accession)
+        new_transfer = models.Unit(uuid=None, path=target, unit_type='transfer', status='FAILED', current=False, accession_id=accession)
         session.add(new_transfer)
+        signal_status(new_transfer)
+        LOGGER.info('SIGNAL')
         return None
 
     LOGGER.info('Finished %s', target)
