@@ -6,7 +6,7 @@
 import requests
 import sys
 
-INVENIO_URL = "http://web:5000/api/oais/archive/{}/"
+INVENIO_URL = "http://web:5000"
 """IP addresse of the Invenio server."""
 
 def main(path, unit_type, status, uuid, accession_id):
@@ -16,17 +16,20 @@ def main(path, unit_type, status, uuid, accession_id):
         "accession_id": accession_id,
         "status": status
     }
-    if uuid and uuid != 'None':
-        params['archivematica_id'] = uuid
-    response = requests.patch(INVENIO_URL.format(accession_id), json=params)
+    if uuid and uuid != "None":
+        params["archivematica_id"] = uuid
+    url = "{base}/api/oais/archive/{accession_id}/".format(
+        base=INVENIO_URL,
+        accession_id=accession_id)
+    response = requests.patch(url, json=params)
     if not response.ok:
         # TODO
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     path = sys.argv[1]
-    unit_type = sys.argv[2]  # String True or False
+    unit_type = sys.argv[2]  # String
     status = sys.argv[3]
     uuid = sys.argv[4]
     accession_id = sys.argv[5]
