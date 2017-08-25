@@ -7,6 +7,7 @@ import requests
 import sys
 
 INVENIO_URL = "http://web:5000"
+INVENIO_ACCESS_TOKEN = "change me"
 """IP addresse of the Invenio server."""
 
 def main(path, unit_type, status, uuid, accession_id):
@@ -21,7 +22,10 @@ def main(path, unit_type, status, uuid, accession_id):
     url = "{base}/api/oais/archive/{accession_id}/".format(
         base=INVENIO_URL,
         accession_id=accession_id)
-    response = requests.patch(url, json=params)
+    response = requests.patch(
+        url,
+        json=params,
+        headers={"Authorization": "Bearer " + INVENIO_ACCESS_TOKEN})
     if not response.ok:
         # TODO
         pass
