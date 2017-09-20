@@ -27,8 +27,11 @@ def main(path, unit_type, status, uuid, accession_id):
         json=params,
         headers={"Authorization": "Bearer " + INVENIO_ACCESS_TOKEN})
     if not response.ok:
-        # TODO
-        pass
+        print("{code}: {reason}:\n{message}".format(
+              code=response.status_code,
+              reason=response.reason,
+              message=response.text))
+        return 1
 
 
 if __name__ == "__main__":
